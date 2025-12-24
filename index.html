@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>🎄 圣诞快乐</title>
+<style>
+html,body{
+  margin:0;
+  background:radial-gradient(circle at top,#0b1d33,#000);
+  overflow:hidden;
+}
+canvas{display:block;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const c=document.getElementById("c");
+const ctx=c.getContext("2d");
+function resize(){
+  c.width=innerWidth;
+  c.height=innerHeight;
+}
+resize();
+addEventListener("resize",resize);
+
+const treeX=c.width*0.38;
+const treeY=c.height*0.78;
+
+const layers=[
+ {h:130,w:360},
+ {h:120,w:320},
+ {h:110,w:280},
+ {h:100,w:240},
+ {h: 90,w:200},
+ {h: 80,w:160},
+];
+
+const snow=[...Array(180)].map(()=>({
+ x:Math.random()*c.width,
+ y:Math.random()*c.height,
+ r:Math.random()*2+0.5,
+ v:Math.random()*1.2+0.4,
+ s:Math.random()*0.6
+}));
+
+function drawSnow(){
+ ctx.fillStyle="white";
+ snow.forEach(s=>{
+  s.y+=s.v;
+  s.x+=Math.sin(s.y*0.01)*s.s;
+  if(s.y>c.height){s.y=-10;s.x=Math.random()*c.width;}
+  ctx.beginPath();
+  ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+  ctx.fill();
+ });
+}
+
+function drawBranchLayer(baseY,h,w,seed){
+ for(let y=0;y<h;y++){
+  const p=y/h;
+  const width=w*(1-p);
+  const noise=Math.sin((y+seed)*0.25)*10+Math.sin(y*0.9)*6;
+  const droop=p*p*14;
+  ctx.fillStyle=`rgb(20,${90+p*80},30)`;
+  ctx.fillRect(treeX-width/2-noise/2,baseY-y+droop,width+noise,1);
+ }
+}
+
+function drawTree(){
+ let y=treeY;
+ layers.forEach((l,i)=>{
+  drawBranchLayer(y,l.h,l.w,i*40);
+  y-=l.h-22;
+ });
+ ctx.fillStyle="#5a3a1c";
+ ctx.fillRect(treeX-22,treeY,44,60);
+}
+
+function drawHalo(t){
+ ctx.save();
+ ctx.translate(treeX,treeY-210);
+ ctx.rotate(t*0.0004);
+ ctx.beginPath();
+ ctx.strokeStyle="rgba(255,220,160,0.25)";
+ ctx.lineWidth=4;
+ ctx.shadowBlur=25;
+ ctx.shadowColor="rgba(255,220,160,0.9)";
+ ctx.arc(0,0,210,0,Math.PI*2);
+ ctx.stroke();
+ ctx.restore();
+ ctx.shadowBlur=0;
+}
+
+function animate(t){
+ ctx.clearRect(0,0,c.width,c.height);
+ drawSnow();
+ drawTree();
+ drawHalo(t);
+ requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
