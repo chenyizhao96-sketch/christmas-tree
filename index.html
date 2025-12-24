@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>🎄 圣诞快乐</title>
 <style>
 html,body{
@@ -12,41 +12,46 @@ html,body{
 canvas{display:block;}
 </style>
 </head>
-
 <body>
 <canvas id="c"></canvas>
 
 <script>
-/* ===== 画布 ===== */
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
+/* ========= 画布（高分屏适配） ========= */
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+let dpr = window.devicePixelRatio || 1;
 
 function resize(){
-  c.width=innerWidth;
-  c.height=innerHeight;
+  const w = innerWidth;
+  const h = innerHeight;
+  c.width = w * dpr;
+  c.height = h * dpr;
+  c.style.width = w + "px";
+  c.style.height = h + "px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 resize();
-addEventListener("resize",resize);
+addEventListener("resize", resize);
 
-/* ===== 树位置 ===== */
-const treeX=c.width*0.38;
-const treeY=c.height*0.78;
+/* ========= 树位置 ========= */
+const treeX = innerWidth * 0.38;
+const treeY = innerHeight * 0.78;
 
-/* ===== 树层 ===== */
+/* ========= 树层 ========= */
 const layers=[
  {h:130,w:360},
  {h:120,w:320},
  {h:110,w:280},
  {h:100,w:240},
- {h:90,w:200},
- {h:80,w:160}
+ {h: 90,w:200},
+ {h: 80,w:160},
 ];
 
-/* ===== 雪 ===== */
-const snow=[...Array(180)].map(()=>({
- x:Math.random()*c.width,
- y:Math.random()*c.height,
- r:Math.random()*2+0.5,
+/* ========= 雪 ========= */
+const snow=[...Array(200)].map(()=>({
+ x:Math.random()*innerWidth,
+ y:Math.random()*innerHeight,
+ r:Math.random()*2+1,
  v:Math.random()*1.2+0.4,
  s:Math.random()*0.6
 }));
@@ -56,30 +61,23 @@ function drawSnow(){
  snow.forEach(s=>{
   s.y+=s.v;
   s.x+=Math.sin(s.y*0.01)*s.s;
-  if(s.y>c.height){s.y=-10;s.x=Math.random()*c.width;}
+  if(s.y>innerHeight){s.y=-10;s.x=Math.random()*innerWidth;}
   ctx.beginPath();
   ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
   ctx.fill();
  });
 }
 
-/* ===== 树体（逼真） ===== */
+/* ========= 树 ========= */
 function drawBranchLayer(baseY,h,w,seed){
  for(let y=0;y<h;y++){
   const p=y/h;
   const width=w*(1-p);
-  const noise=
-    Math.sin((y+seed)*0.25)*10 +
-    Math.sin(y*0.9)*6 +
-    (Math.random()-0.5)*4;
+  const noise=Math.sin((y+seed)*0.25)*10 + Math.sin(y*0.9)*6;
   const droop=p*p*14;
-  ctx.fillStyle=`rgb(20,${90+p*70},30)`;
-  ctx.fillRect(
-   treeX-width/2-noise/2,
-   baseY-y+droop,
-   width+noise,
-   1
-  );
+  const g=70+p*90;
+  ctx.fillStyle=`rgb(20,${g},30)`;
+  ctx.fillRect(treeX-width/2-noise/2,baseY-y+droop,width+noise,1);
  }
 }
 
@@ -93,7 +91,7 @@ function drawTree(){
  ctx.fillRect(treeX-22,treeY,44,60);
 }
 
-/* ===== 彩灯 ===== */
+/* ========= 彩灯 ========= */
 const colors=["#ff4d4d","#ffd700","#00e5ff","#7CFF00","#ff7aff"];
 const lights=[...Array(120)].map(()=>({
  layer:Math.floor(Math.random()*layers.length),
@@ -109,11 +107,11 @@ function drawLights(t){
   const y=treeY-offset-l.t*layer.h;
   const r=layer.w*(1-l.t)/2;
   const x=treeX+Math.cos(l.t*8+t*0.002)*r;
-  const glow=3+Math.sin(t*0.006+l.phase)*2;
+  const glow=8+Math.sin(t*0.006+l.phase)*3;
 
   ctx.beginPath();
   ctx.fillStyle=l.c;
-  ctx.shadowBlur=glow*2;
+  ctx.shadowBlur=glow*3;
   ctx.shadowColor=l.c;
   ctx.arc(x,y,glow,0,Math.PI*2);
   ctx.fill();
@@ -121,7 +119,7 @@ function drawLights(t){
  ctx.shadowBlur=0;
 }
 
-/* ===== 苹果 & 糖果 ===== */
+/* ========= 苹果 & 糖果 ========= */
 const ornaments=[...Array(30)].map(()=>({
  layer:Math.floor(Math.random()*layers.length),
  t:Math.random(),
@@ -130,9 +128,9 @@ const ornaments=[...Array(30)].map(()=>({
 }));
 
 function drawApple(x,y){
- ctx.fillStyle="#c80000";
+ ctx.fillStyle="#d60000";
  ctx.beginPath();
- ctx.arc(x,y,6,0,Math.PI*2);
+ ctx.arc(x,y,12,0,Math.PI*2);
  ctx.fill();
 }
 
@@ -140,12 +138,12 @@ function drawCandy(x,y){
  ctx.save();
  ctx.translate(x,y);
  ctx.rotate(-Math.PI/6);
- ctx.lineWidth=3;
+ ctx.lineWidth=4;
  for(let i=0;i<6;i++){
   ctx.strokeStyle=i%2?"#ff3b3b":"white";
   ctx.beginPath();
-  ctx.moveTo(0,-8+i*3);
-  ctx.lineTo(0,8+i*3);
+  ctx.moveTo(0,-10+i*4);
+  ctx.lineTo(0,10+i*4);
   ctx.stroke();
  }
  ctx.restore();
@@ -162,23 +160,23 @@ function drawOrnaments(){
  });
 }
 
-/* ===== 光环 ===== */
+/* ========= 光环 ========= */
 function drawHalo(t){
  ctx.save();
  ctx.translate(treeX,treeY-220);
  ctx.rotate(t*0.0004);
- ctx.strokeStyle="rgba(255,220,160,0.25)";
- ctx.lineWidth=4;
- ctx.shadowBlur=26;
- ctx.shadowColor="rgba(255,220,160,0.8)";
  ctx.beginPath();
+ ctx.strokeStyle="rgba(255,220,160,0.25)";
+ ctx.lineWidth=5;
+ ctx.shadowBlur=30;
+ ctx.shadowColor="rgba(255,220,160,0.9)";
  ctx.arc(0,0,210,0,Math.PI*2);
  ctx.stroke();
  ctx.restore();
  ctx.shadowBlur=0;
 }
 
-/* ===== 祝福文字 ===== */
+/* ========= 文字 ========= */
 function drawText(t){
  ctx.save();
  ctx.font="bold 42px 'Microsoft YaHei'";
@@ -186,26 +184,20 @@ function drawText(t){
  ctx.shadowBlur=25;
  ctx.shadowColor="#ffd700";
  const o=Math.sin(t*0.002)*6;
- ctx.fillText("祝徐露涵",c.width*0.62,c.height*0.42+o);
- ctx.fillText("圣诞节快乐 🎄",c.width*0.62,c.height*0.48+o);
+ ctx.fillText("祝徐露涵",innerWidth*0.62,innerHeight*0.42+o);
+ ctx.fillText("圣诞节快乐 🎄",innerWidth*0.62,innerHeight*0.48+o);
  ctx.restore();
 }
 
-/* ===== 动画 ===== */
+/* ========= 动画 ========= */
 function animate(t){
- ctx.clearRect(0,0,c.width,c.height);
-
+ ctx.clearRect(0,0,innerWidth,innerHeight);
  drawSnow();
  drawTree();
-
- ctx.globalCompositeOperation="lighter";
  drawLights(t);
  drawOrnaments();
- ctx.globalCompositeOperation="source-over";
-
  drawHalo(t);
  drawText(t);
-
  requestAnimationFrame(animate);
 }
 animate();
